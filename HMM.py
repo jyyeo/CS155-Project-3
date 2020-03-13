@@ -518,54 +518,30 @@ class HiddenMarkovModel:
         return emission, states
 
     def generate_emission_backwards(self, M, start_state):
-
         emission = []
         states = []
+        
+        # generate transposed, normalized transition matrix for reverse generation
+        At = np.array(self.A).T
+        for i in range(len(At)):
+            norm = sum(At[i])
+            for j in range(len(At[i])):
+                At[i][j] /= norm
+                
+        i=0
+        emission.append(start_state)
+        
+        temp = []
+        for s in self.O:
+            temp.append(s[start_state])
+        state = temp.index(max(temp))
+        states.append(state)
 
-        tran_mat = np.asarray(self.A)
-        tran_mat = np.reshape(tran_mat,(self.L,self.L))
-        cumsum_A = np.zeros((self.L,self.L))
-        emi_mat = np.asarray(self.O)
-        emi_mat = np.reshape(emi_mat,(self.L, self.D))
-        cumsum_O = np.zeros((self.L,self.D))
-        for i in range(self.L):
-            for j in range(self.L):
-                if j == 0:
-                    cumsum_A[i][j] = tran_mat[i][j]
-                else:
-                    cumsum_A[i][j] = cumsum_A[i][j-1] + tran_mat[i][j]
-        for i in range(self.L):
-            for j in range(self.D):
-                if j == 0:
-                    cumsum_O[i][j] = emi_mat[i][j]
-                else:
-                    cumsum_O[i][j] = cumsum_O[i][j-1] + emi_mat[i][j]
-        states.append(start_state)
-        r = random.uniform(0,1)
-        k = 0
-        flag2 = 0
-        while k < self.D and flag2 == 0:
-            if r < cumsum_O[states[0]][k]:
-                emission.append(k)
-                flag2 = 1
-            k += 1
-        for i in range(1,M): # length of sequence
-            r1 = random.uniform(0,1)
-            flag1 = 0
-            flag2 = 0
-            j = 0
-            k = 0
-            while j < self.L and flag1 == 0:
-                if r1 < cumsum_A[states[i-1]][j]:
-                    states.append(j)
-                    flag1 = 1
-                    r2 = random.uniform(0,1)
-                    while k < self.D and flag2 == 0:
-                        if r2 < cumsum_O[states[i]][k]:
-                            emission.append(k)
-                            flag2 = 1
-                        k += 1
-                j += 1
+        for i in range(1,M):
+        	state = np.random.choice(self.L,p=At[state])
+        	states.append(state)
+        	emission.append(np.random.choice(self.D,p=self.O[state]))
+
         return emission, states
     
     def probability_alphas(self, x):
