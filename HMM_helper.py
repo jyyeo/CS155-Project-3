@@ -127,6 +127,15 @@ def sample_sentence(hmm, obs_map, n_words=100):
 
     return ' '.join(sentence).capitalize() + '...'
 
+def sample_sentence_backwards(hmm, obs_map, n_words, start_state):
+    # Get reverse map.
+    obs_map_r = obs_map_reverser(obs_map)
+
+    # Sample and convert sentence.
+    emission, states = hmm.generate_emission_backwards(n_words,start_state)
+    sentence = [obs_map_r[i] for i in emission]
+    sentence = sentence[-1]
+    return ' '.join(sentence).capitalize() + '...'
 
 ####################
 # HMM VISUALIZATION FUNCTIONS
