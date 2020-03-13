@@ -520,7 +520,14 @@ class HiddenMarkovModel:
     def generate_emission_backwards(self, M, start_state):
         emission = []
         states = []
-
+        
+        # generate transposed, normalized transition matrix for reverse generation
+        At = np.array(self.A).T
+        for i in range(len(At)):
+            norm = sum(At[i])
+            for j in range(len(At[i])):
+                At[i][j] /= norm
+                
         i=0
         emission.append(start_state)
         
@@ -531,7 +538,7 @@ class HiddenMarkovModel:
         states.append(state)
 
         for i in range(1,M):
-        	state = np.random.choice(self.L,p=self.A[state])
+        	state = np.random.choice(self.L,p=At[state])
         	states.append(state)
         	emission.append(np.random.choice(self.D,p=self.O[state]))
 
